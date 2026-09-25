@@ -1,0 +1,132 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var currentUser = SignInManager.IsSignedIn(User) ? await UserManager.GetUserAsync(User) : null;
+    var isAdmin = User.IsInRole(RoleNames.SuperAdministrator);
+    var isOfficer = User.IsInRole(RoleNames.ComplaintOfficer);
+    var isComplainant = User.IsInRole(RoleNames.Complainant);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Online Complaint Management System</title>
+    <script>
+        (function () {
+            var theme = localStorage.getItem('cms-theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="app-body">
+    <nav class="navbar app-topbar sticky-top px-2 px-md-3">
+        <button class="btn btn-sm btn-icon d-lg-none text-white me-1" type="button" id="sidebarToggle" aria-label="Toggle sidebar">
+            <i class="bi bi-list fs-4"></i>
+        </button>
+        <a class="navbar-brand fw-semibold text-white" asp-page="/Index">
+            <i class="bi bi-shield-check me-2"></i><span class="d-none d-sm-inline">Complaint Management System</span>
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-icon text-white" type="button" id="themeToggle" aria-label="Toggle light/dark appearance" title="Toggle appearance">
+                <i class="bi bi-moon-stars fs-5" id="themeToggleIcon"></i>
+            </button>
+            @if (SignInManager.IsSignedIn(User))
+            {
+                @await Component.InvokeAsync("Notifications")
+
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-icon text-white dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
+                        @if (!string.IsNullOrEmpty(currentUser?.ProfilePhotoPath))
+                        {
+                            <img src="@currentUser.ProfilePhotoPath" alt="Profile photo" class="rounded-circle" style="width:26px;height:26px;object-fit:cover;" />
+                        }
+                        else
+                        {
+                            <i class="bi bi-person-circle fs-5"></i>
+                        }
+                        <span class="d-none d-md-inline">@currentUser?.FullName</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><h6 class="dropdown-header">@currentUser?.FullName</h6></li>
+                        <li><span class="dropdown-item-text text-muted small">@currentUser?.Email</span></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" asp-page="/Account/Manage/Profile"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                        <li><a class="dropdown-item" asp-page="/Account/Manage/ChangePassword"><i class="bi bi-key me-2"></i>Change Password</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form id="logoutForm" method="post" asp-page="/Account/Logout">
+                                <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </nav>
+
+    <div class="app-shell">
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-section">Main</div>
+            @if (isAdmin)
+            {
+                <a class="sidebar-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Admin/Dashboard" ? "active" : "")" asp-page="/Admin/Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a class="sidebar-link" asp-page="/Admin/Complaints/Index"><i class="bi bi-card-list"></i> Complaints</a>
+                <div class="sidebar-section">Configuration</div>
+                <a class="sidebar-link" asp-page="/Admin/Departments/Index"><i class="bi bi-building"></i> Departments</a>
+                <a class="sidebar-link" asp-page="/Admin/Categories/Index"><i class="bi bi-tags"></i> Categories</a>
+                <a class="sidebar-link" asp-page="/Admin/Users/Index"><i class="bi bi-people"></i> Users</a>
+                <div class="sidebar-section">Insights</div>
+                <a class="sidebar-link" asp-page="/Admin/Reports/Index"><i class="bi bi-graph-up"></i> Reports</a>
+                <a class="sidebar-link" asp-page="/Admin/AuditLogs/Index"><i class="bi bi-journal-text"></i> Audit Logs</a>
+                <a class="sidebar-link" asp-page="/Admin/Settings/Index"><i class="bi bi-gear"></i> Settings</a>
+            }
+            else if (isOfficer)
+            {
+                <a class="sidebar-link" asp-page="/Officer/Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a class="sidebar-link" asp-page="/Officer/Complaints/Index"><i class="bi bi-card-list"></i> Assigned Complaints</a>
+            }
+            else if (isComplainant)
+            {
+                <a class="sidebar-link" asp-page="/Complainant/Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a class="sidebar-link" asp-page="/Complainant/Complaints/Submit"><i class="bi bi-file-earmark-plus"></i> Submit Complaint</a>
+                <a class="sidebar-link" asp-page="/Complainant/Complaints/Index"><i class="bi bi-card-list"></i> My Complaints</a>
+                <a class="sidebar-link" asp-page="/Complaints/Track"><i class="bi bi-search"></i> Track a Complaint</a>
+            }
+        </aside>
+
+        <div class="app-sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <main class="app-content">
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>@successMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>@errorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,20 @@
+@page "{id:int}"
+@model OnlineComplaintManagementSystem.Pages.Complainant.Complaints.ConfirmationModel
+@{
+    ViewData["Title"] = "Complaint Submitted";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card card-panel p-5 text-center">
+            <i class="bi bi-check-circle-fill text-success display-3 mb-3"></i>
+            <h3 class="section-title">Complaint Submitted Successfully</h3>
+            <p class="text-muted">Your complaint has been recorded. Please keep your reference number for tracking purposes.</p>
+            <div class="ref-code fs-3 my-3">@Model.Complaint?.ReferenceNumber</div>
+            <div class="d-flex justify-content-center gap-2">
+                <a asp-page="/Complainant/Complaints/Details" asp-route-id="@Model.Complaint?.Id" class="btn btn-primary">View Complaint</a>
+                <a asp-page="/Complainant/Dashboard" class="btn btn-outline-secondary">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>

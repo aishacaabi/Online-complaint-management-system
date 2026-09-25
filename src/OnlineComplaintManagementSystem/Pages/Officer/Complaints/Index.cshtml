@@ -1,0 +1,101 @@
+@page
+@using OnlineComplaintManagementSystem.Helpers
+@using OnlineComplaintManagementSystem.Models
+@using OnlineComplaintManagementSystem.ViewModels
+@model OnlineComplaintManagementSystem.Pages.Officer.Complaints.IndexModel
+@{
+    ViewData["Title"] = "Assigned Complaints";
+}
+
+<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <h4 class="section-title mb-0">Assigned Complaints</h4>
+    @if (Model.StatusGroup == "pending")
+    {
+        <span class="badge bg-warning text-dark">Filtered: Pending</span>
+        <a asp-page="/Officer/Complaints/Index" class="small">Clear</a>
+    }
+    else if (Model.StatusGroup == "overdue")
+    {
+        <span class="badge bg-danger">Filtered: Overdue</span>
+        <a asp-page="/Officer/Complaints/Index" class="small">Clear</a>
+    }
+</div>
+
+<div class="card card-panel p-3 mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small">Search</label>
+            <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Title or reference number" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                @foreach (ComplaintStatus s in Enum.GetValues(typeof(ComplaintStatus)))
+                {
+                    <option value="@s" selected="@(s == Model.StatusFilter)">@s.DisplayName()</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Priority</label>
+            <select name="priority" class="form-select">
+                <option value="">All Priorities</option>
+                @foreach (ComplaintPriority p in Enum.GetValues(typeof(ComplaintPriority)))
+                {
+                    <option value="@p" selected="@(p == Model.PriorityFilter)">@p</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="card card-panel">
+    @if (!Model.Complaints.Any())
+    {
+        <div class="p-4 text-center text-muted">No complaints match your filters.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Title</th>
+                        <th>Complainant</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Complaints)
+                    {
+                        <tr>
+                            <td class="ref-code">@c.ReferenceNumber</td>
+                            <td>@c.Title</td>
+                            <td>@c.Complainant?.FullName</td>
+                            <td>@c.Category?.Name</td>
+                            <td><span class="badge @c.Priority.BadgeClass()">@c.Priority</span></td>
+                            <td><span class="badge @c.Status.BadgeClass()">@c.Status.DisplayName()</span></td>
+                            <td>@c.SubmittedDate.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                            <td><a asp-page="/Officer/Complaints/Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<partial name="_Pagination" model="@(new PaginationInfo {
+    CurrentPage = Model.CurrentPage,
+    TotalPages = Model.TotalPages,
+    RouteValues = new Dictionary<string, string?> { ["search"] = Model.SearchTerm, ["status"] = Model.StatusFilter?.ToString(), ["priority"] = Model.PriorityFilter?.ToString(), ["statusGroup"] = Model.StatusGroup }
+})" />

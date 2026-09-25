@@ -1,0 +1,99 @@
+@page
+@model OnlineComplaintManagementSystem.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container login-shell py-4">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-9">
+            <div class="card auth-card">
+                <div class="row g-0">
+                    <div class="col-md-5 auth-side p-4 d-none d-md-flex flex-column justify-content-center">
+                        <i class="bi bi-person-plus display-4 mb-3"></i>
+                        <h4 class="fw-semibold">Create Your Account</h4>
+                        <p class="opacity-75">Register as a complainant to submit and track complaints online.</p>
+                    </div>
+                    <div class="col-md-7 p-4 p-md-5">
+                        <h3 class="section-title mb-1">Register</h3>
+                        <p class="text-muted mb-4">All fields marked required must be completed.</p>
+
+                        <div asp-validation-summary="All" class="alert alert-danger d-none-empty" role="alert"></div>
+
+                        <form method="post">
+                            <div class="mb-3">
+                                <label asp-for="Input.FullName" class="form-label"></label>
+                                <input asp-for="Input.FullName" class="form-control" />
+                                <span asp-validation-for="Input.FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Input.Email" class="form-label"></label>
+                                <input asp-for="Input.Email" class="form-control" autocomplete="username" />
+                                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                                    <input asp-for="Input.PhoneNumber" class="form-control" />
+                                    <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Input.Address" class="form-label"></label>
+                                    <input asp-for="Input.Address" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Input.Password" class="form-label"></label>
+                                    <div class="input-group">
+                                        <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+                                        <button class="btn btn-outline-secondary toggle-password" type="button"
+                                                tabindex="-1" aria-label="Show or hide password" title="Show password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                                    <div class="input-group">
+                                        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                                        <button class="btn btn-outline-secondary toggle-password" type="button"
+                                                tabindex="-1" aria-label="Show or hide password" title="Show password">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="form-text mb-3">Password must be at least 8 characters and include an uppercase letter, lowercase letter, digit, and special character.</div>
+                            <button type="submit" class="btn btn-primary w-100 py-2">Create Account</button>
+                        </form>
+
+                        <p class="text-center text-muted mt-4 mb-0">
+                            Already have an account? <a asp-page="/Account/Login">Sign in</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Password fields stay masked by default; this reveals them while the user checks what they typed.
+        document.querySelectorAll('.toggle-password').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = btn.parentElement.querySelector('input');
+                var icon = btn.querySelector('i');
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                icon.classList.toggle('bi-eye', !show);
+                icon.classList.toggle('bi-eye-slash', show);
+                btn.title = show ? 'Hide password' : 'Show password';
+            });
+        });
+    </script>
+}

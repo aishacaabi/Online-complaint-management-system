@@ -1,0 +1,109 @@
+@page
+@using OnlineComplaintManagementSystem.Helpers
+@model OnlineComplaintManagementSystem.Pages.Complainant.DashboardModel
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="section-title mb-0">My Dashboard</h4>
+    <a asp-page="/Complainant/Complaints/Submit" class="btn btn-primary"><i class="bi bi-file-earmark-plus me-1"></i>Submit New Complaint</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Complainant/Complaints/Index" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#1a4d8f;"><i class="bi bi-card-list"></i></div>
+            <div>
+                <div class="stat-value">@Model.TotalComplaints</div>
+                <div class="stat-label">My Total Complaints</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Complainant/Complaints/Index" asp-route-status="Submitted" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#6c757d;"><i class="bi bi-send"></i></div>
+            <div>
+                <div class="stat-value">@Model.SubmittedCount</div>
+                <div class="stat-label">Submitted</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Complainant/Complaints/Index" asp-route-statusGroup="pending" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#e0a800;"><i class="bi bi-hourglass-split"></i></div>
+            <div>
+                <div class="stat-value">@Model.PendingCount</div>
+                <div class="stat-label">Pending / In Progress</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Complainant/Complaints/Index" asp-route-statusGroup="resolved" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#1e7e34;"><i class="bi bi-check-circle"></i></div>
+            <div>
+                <div class="stat-value">@Model.ResolvedCount</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Complainant/Complaints/Index" asp-route-status="Closed" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#343a40;"><i class="bi bi-lock"></i></div>
+            <div>
+                <div class="stat-value">@Model.ClosedCount</div>
+                <div class="stat-label">Closed</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Complainant/Complaints/Index" asp-route-status="Rejected" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#c0392b;"><i class="bi bi-x-circle"></i></div>
+            <div>
+                <div class="stat-value">@Model.RejectedCount</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="card card-panel">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h6 class="mb-0 section-title">Recent Complaints</h6>
+        <a asp-page="/Complainant/Complaints/Index" class="small">View all</a>
+    </div>
+    @if (!Model.RecentComplaints.Any())
+    {
+        <div class="p-4 text-center text-muted">You haven't submitted any complaints yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.RecentComplaints)
+                    {
+                        <tr>
+                            <td class="ref-code">@c.ReferenceNumber</td>
+                            <td>@c.Title</td>
+                            <td>@c.Category?.Name</td>
+                            <td><span class="badge @c.Status.BadgeClass()">@c.Status.DisplayName()</span></td>
+                            <td>@c.SubmittedDate.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                            <td><a asp-page="/Complainant/Complaints/Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

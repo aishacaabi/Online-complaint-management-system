@@ -1,0 +1,53 @@
+@page
+@model OnlineComplaintManagementSystem.Pages.Admin.Settings.IndexModel
+@{
+    ViewData["Title"] = "System Settings";
+}
+
+<h4 class="section-title mb-3"><i class="bi bi-gear me-2"></i>System Settings</h4>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card card-panel p-4 mb-3">
+            <h6 class="section-title mb-3">General Configuration</h6>
+            <div asp-validation-summary="All" class="alert alert-danger d-none-empty"></div>
+            <form method="post">
+                <div class="mb-3">
+                    <label asp-for="Input.OrganizationName" class="form-label"></label>
+                    <input asp-for="Input.OrganizationName" class="form-control" />
+                    <span asp-validation-for="Input.OrganizationName" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.DefaultResolutionDays" class="form-label"></label>
+                    <input asp-for="Input.DefaultResolutionDays" type="number" class="form-control" />
+                    <div class="form-text">Number of days used to calculate the expected resolution date for newly submitted complaints.</div>
+                    <span asp-validation-for="Input.DefaultResolutionDays" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.SupportEmail" class="form-label"></label>
+                    <input asp-for="Input.SupportEmail" class="form-control" />
+                    <span asp-validation-for="Input.SupportEmail" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Save Settings</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card card-panel p-4">
+            <h6 class="section-title mb-3">System Overview</h6>
+            <dl class="row mb-0 small">
+                <dt class="col-7 text-muted">Total Users</dt><dd class="col-5">@Model.TotalUsers</dd>
+                <dt class="col-7 text-muted">Super Administrators</dt><dd class="col-5">@Model.TotalAdmins</dd>
+                <dt class="col-7 text-muted">Complaint Officers</dt><dd class="col-5">@Model.TotalOfficers</dd>
+                <dt class="col-7 text-muted">Complainants</dt><dd class="col-5">@Model.TotalComplainants</dd>
+                <dt class="col-7 text-muted">Departments</dt><dd class="col-5">@Model.TotalDepartments</dd>
+                <dt class="col-7 text-muted">Complaint Categories</dt><dd class="col-5">@Model.TotalCategories</dd>
+                <dt class="col-7 text-muted">Total Complaints</dt><dd class="col-5">@Model.TotalComplaints</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

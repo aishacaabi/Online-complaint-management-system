@@ -1,0 +1,64 @@
+@page
+@using OnlineComplaintManagementSystem.ViewModels
+@model OnlineComplaintManagementSystem.Pages.Admin.AuditLogs.IndexModel
+@{
+    ViewData["Title"] = "Audit Logs";
+}
+
+<h4 class="section-title mb-3"><i class="bi bi-journal-text me-2"></i>Audit Logs</h4>
+
+<div class="card card-panel p-3 mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label small">Search</label>
+            <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="User or description" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Action</label>
+            <select name="action" class="form-select">
+                <option value="">All Actions</option>
+                @foreach (var a in Model.Actions)
+                {
+                    <option value="@a" selected="@(a == Model.ActionFilter)">@a</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">From Date</label>
+            <input type="date" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">To Date</label>
+            <input type="date" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-funnel"></i></button>
+        </div>
+    </form>
+</div>
+
+<div class="card card-panel">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Date/Time</th><th>User</th><th>Action</th><th>Description</th><th>IP Address</th></tr></thead>
+            <tbody>
+                @foreach (var log in Model.Logs)
+                {
+                    <tr>
+                        <td class="small">@log.Timestamp.ToLocalTime().ToString("MMM dd, yyyy HH:mm:ss")</td>
+                        <td>@log.UserName</td>
+                        <td><span class="badge bg-secondary">@log.Action</span></td>
+                        <td class="small">@log.Description</td>
+                        <td class="small text-muted">@log.IpAddress</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<partial name="_Pagination" model="@(new PaginationInfo {
+    CurrentPage = Model.CurrentPage,
+    TotalPages = Model.TotalPages,
+    RouteValues = new Dictionary<string, string?> { ["search"] = Model.SearchTerm, ["action"] = Model.ActionFilter, ["fromDate"] = Model.FromDate?.ToString("yyyy-MM-dd"), ["toDate"] = Model.ToDate?.ToString("yyyy-MM-dd") }
+})" />

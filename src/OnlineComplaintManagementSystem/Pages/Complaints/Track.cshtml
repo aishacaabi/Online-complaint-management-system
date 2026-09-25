@@ -1,0 +1,76 @@
+@page
+@using OnlineComplaintManagementSystem.Helpers
+@model OnlineComplaintManagementSystem.Pages.Complaints.TrackModel
+@{
+    ViewData["Title"] = "Track Complaint";
+}
+
+<section class="hero-section py-5">
+    <div class="container">
+        <h1 class="h2 fw-bold mb-2"><i class="bi bi-search me-2"></i>Track Your Complaint</h1>
+        <p class="opacity-90 mb-0">Enter your complaint reference number and the email address you used when submitting.</p>
+    </div>
+</section>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card card-panel p-4 mb-4">
+                <div asp-validation-summary="All" class="alert alert-danger d-none-empty"></div>
+                <form method="post" class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Input.ReferenceNumber" class="form-label"></label>
+                        <input asp-for="Input.ReferenceNumber" class="form-control" placeholder="CMP-2026-000001" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <input asp-for="Input.Email" class="form-control" placeholder="you@example.com" />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-search me-1"></i>Track Complaint</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Searched && Model.Result is not null)
+    {
+        var c = Model.Result;
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="card card-panel p-4 mb-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+                        <div>
+                            <div class="text-muted small">Reference Number</div>
+                            <h4 class="ref-code mb-0">@c.ReferenceNumber</h4>
+                        </div>
+                        <span class="badge @c.Status.BadgeClass() fs-6">@c.Status.DisplayName()</span>
+                    </div>
+                    <h5 class="section-title">@c.Title</h5>
+                    <div class="row small text-muted g-2 mt-1">
+                        <div class="col-md-6"><i class="bi bi-tag me-1"></i>Category: <strong class="text-dark">@c.Category?.Name</strong></div>
+                        <div class="col-md-6"><i class="bi bi-building me-1"></i>Department: <strong class="text-dark">@c.Department?.Name</strong></div>
+                        <div class="col-md-6"><i class="bi bi-person-badge me-1"></i>Assigned Officer: <strong class="text-dark">@(c.CurrentOfficer?.FullName ?? "Not yet assigned")</strong></div>
+                        <div class="col-md-6"><i class="bi bi-calendar-plus me-1"></i>Submitted: <strong class="text-dark">@c.SubmittedDate.ToLocalTime().ToString("MMM dd, yyyy")</strong></div>
+                        <div class="col-md-6"><i class="bi bi-clock-history me-1"></i>Last Updated: <strong class="text-dark">@((c.UpdatedDate ?? c.SubmittedDate).ToLocalTime().ToString("MMM dd, yyyy"))</strong></div>
+                        <div class="col-md-6"><i class="bi bi-calendar-check me-1"></i>Expected Resolution: <strong class="text-dark">@(c.ExpectedResolutionDate?.ToLocalTime().ToString("MMM dd, yyyy") ?? "-")</strong></div>
+                    </div>
+                </div>
+
+                <div class="card card-panel p-4">
+                    <h6 class="section-title mb-3"><i class="bi bi-signpost-split me-1"></i>Progress Timeline</h6>
+                    <ul class="timeline">
+                        @foreach (var h in c.StatusHistory.OrderBy(h => h.ChangedDate))
+                        {
+                            <li class="@(h.NewStatus == Models.ComplaintStatus.Rejected ? "rejected" : "done")">
+                                <div class="fw-semibold small">@h.NewStatus.DisplayName()</div>
+                                <div class="text-muted small">@h.ChangedDate.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</div>

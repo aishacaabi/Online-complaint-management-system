@@ -1,0 +1,305 @@
+@using OnlineComplaintManagementSystem.Helpers
+@using OnlineComplaintManagementSystem.Models
+@model OnlineComplaintManagementSystem.ViewModels.ComplaintDetailsViewModel
+@{
+    var c = Model.Complaint;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+    <div>
+        <div class="text-muted small mb-1">Complaint Reference</div>
+        <h4 class="ref-code mb-0">@c.ReferenceNumber</h4>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge @c.Status.BadgeClass() fs-6">@c.Status.DisplayName()</span>
+        <span class="badge @c.Priority.BadgeClass() fs-6">@c.Priority Priority</span>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card card-panel p-4 mb-3">
+            <h5 class="section-title">@c.Title</h5>
+            <p class="mb-3" style="white-space: pre-wrap;">@c.Description</p>
+            <div class="row small text-muted g-2">
+                <div class="col-md-6"><i class="bi bi-tag me-1"></i>Category: <strong class="text-dark">@c.Category?.Name</strong></div>
+                <div class="col-md-6"><i class="bi bi-building me-1"></i>Department: <strong class="text-dark">@c.Department?.Name</strong></div>
+                <div class="col-md-6"><i class="bi bi-geo-alt me-1"></i>Location: <strong class="text-dark">@(c.Location ?? "Not specified")</strong></div>
+                <div class="col-md-6"><i class="bi bi-person-badge me-1"></i>Assigned Officer: <strong class="text-dark">@(c.CurrentOfficer?.FullName ?? "Unassigned")</strong></div>
+                <div class="col-md-6"><i class="bi bi-calendar-plus me-1"></i>Submitted: <strong class="text-dark">@c.SubmittedDate.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</strong></div>
+                <div class="col-md-6"><i class="bi bi-calendar-check me-1"></i>Expected Resolution: <strong class="text-dark">@(c.ExpectedResolutionDate?.ToLocalTime().ToString("MMM dd, yyyy") ?? "-")</strong></div>
+                @if (c.ResolvedDate.HasValue)
+                {
+                    <div class="col-md-6"><i class="bi bi-check2-circle me-1"></i>Resolved: <strong class="text-dark">@c.ResolvedDate.Value.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</strong></div>
+                }
+                @if (c.UpdatedDate.HasValue)
+                {
+                    <div class="col-md-6"><i class="bi bi-clock-history me-1"></i>Last Updated: <strong class="text-dark">@c.UpdatedDate.Value.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</strong></div>
+                }
+            </div>
+
+            @if (Model.ShowContactInfo)
+            {
+                <hr />
+                <div class="small">
+                    <div class="text-muted mb-1">Complainant Contact</div>
+                    <div><strong>@c.Complainant?.FullName</strong> &middot; @(c.ContactEmail ?? c.Complainant?.Email) @(string.IsNullOrEmpty(c.ContactPhone) ? "" : $"· {c.ContactPhone}")</div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(c.ResolutionSummary))
+            {
+                <hr />
+                <div class="alert alert-success mb-0">
+                    <strong>Resolution Summary:</strong> @c.ResolutionSummary
+                </div>
+            }
+        </div>
+
+        @if (c.Attachments.Any())
+        {
+            <div class="card card-panel p-4 mb-3">
+                <h6 class="section-title mb-3"><i class="bi bi-paperclip me-1"></i>Attachments</h6>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var att in c.Attachments.OrderByDescending(a => a.UploadedDate))
+                    {
+                        <li class="mb-2">
+                            <a asp-page="/Complaints/DownloadAttachment" asp-route-id="@att.Id" class="text-decoration-none">
+                                <i class="bi bi-file-earmark-arrow-down me-1"></i>@att.FileName
+                            </a>
+                            <span class="text-muted small">(@((att.FileSizeBytes / 1024.0).ToString("N0")) KB &middot; @att.UploadedDate.ToLocalTime().ToString("MMM dd, yyyy"))</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (Model.CanUploadAttachment)
+        {
+            <div class="card card-panel p-4 mb-3">
+                <h6 class="section-title mb-3"><i class="bi bi-upload me-1"></i>Upload Additional Document</h6>
+                <form method="post" asp-page-handler="UploadAttachment" enctype="multipart/form-data" class="row g-2">
+                    <div class="col-md-9">
+                        <input type="file" name="uploadFile" class="form-control" required />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-outline-primary w-100">Upload</button>
+                    </div>
+                    <div class="form-text">Allowed: jpg, png, gif, pdf, doc(x), xls(x), txt. Max 10 MB.</div>
+                </form>
+            </div>
+        }
+
+        <div class="card card-panel p-4 mb-3">
+            <h6 class="section-title mb-3"><i class="bi bi-chat-dots me-1"></i>Communication History</h6>
+            @if (!c.Responses.Any())
+            {
+                <p class="text-muted small">No messages yet.</p>
+            }
+            else
+            {
+                foreach (var r in c.Responses.OrderBy(r => r.CreatedDate))
+                {
+                    var isOfficer = r.AuthorType == ResponseAuthorType.ComplaintOfficer;
+                    <div class="d-flex mb-3 @(isOfficer ? "" : "flex-row-reverse")">
+                        <div class="p-3 rounded-3 @(isOfficer ? "bg-light" : "bg-primary text-white")" style="max-width: 75%;">
+                            <div class="d-flex justify-content-between gap-3 small mb-1 @(isOfficer ? "text-muted" : "text-white-50")">
+                                <strong>@r.Author?.FullName @(r.IsInformationRequest ? " (Info Request)" : "")</strong>
+                                <span>@r.CreatedDate.ToLocalTime().ToString("MMM dd, HH:mm")</span>
+                            </div>
+                            <div style="white-space: pre-wrap;">@r.Message</div>
+                            @if (r.Attachments.Any())
+                            {
+                                <div class="mt-2 small">
+                                    @foreach (var att in r.Attachments)
+                                    {
+                                        <div><a asp-page="/Complaints/DownloadAttachment" asp-route-id="@att.Id" class="@(isOfficer ? "" : "text-white")"><i class="bi bi-paperclip"></i> @att.FileName</a></div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            @if (Model.CanReply)
+            {
+                <hr />
+                <form method="post" asp-page-handler="Reply" enctype="multipart/form-data">
+                    <div class="mb-2">
+                        <textarea name="message" class="form-control" rows="3" placeholder="Type your message..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="file" name="uploadFile" class="form-control form-control-sm" />
+                            @if (Model.CanRequestInfo)
+                            {
+                                <div class="form-check ms-2">
+                                    <input class="form-check-input" type="checkbox" name="isInformationRequest" value="true" id="isInfoRequest" />
+                                    <label class="form-check-label small" for="isInfoRequest">Mark as information request</label>
+                                </div>
+                            }
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Send</button>
+                    </div>
+                </form>
+            }
+        </div>
+
+        @if (Model.CanGiveFeedback && c.Feedback is null && (c.Status == ComplaintStatus.Resolved || c.Status == ComplaintStatus.Closed))
+        {
+            <div class="card card-panel p-4 mb-3">
+                <h6 class="section-title mb-3"><i class="bi bi-star me-1"></i>Rate Your Experience</h6>
+                <form method="post" asp-page-handler="Feedback">
+                    <div class="star-rating mb-3" style="font-size: 1.8rem;">
+                        <input type="hidden" name="rating" value="5" />
+                        @for (var i = 1; i <= 5; i++)
+                        {
+                            <i class="bi bi-star-fill star text-warning" data-value="@i" style="cursor:pointer;"></i>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <textarea name="comments" class="form-control" rows="2" placeholder="Additional comments (optional)"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </form>
+            </div>
+        }
+        else if (c.Feedback is not null)
+        {
+            <div class="card card-panel p-4 mb-3">
+                <h6 class="section-title mb-2"><i class="bi bi-star-fill text-warning me-1"></i>Feedback Submitted</h6>
+                <div class="mb-1">
+                    @for (var i = 1; i <= 5; i++)
+                    {
+                        <i class="bi @(i <= c.Feedback.Rating ? "bi-star-fill text-warning" : "bi-star text-muted")"></i>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(c.Feedback.Comments))
+                {
+                    <p class="text-muted small mb-0">"@c.Feedback.Comments"</p>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card card-panel p-4 mb-3">
+            <h6 class="section-title mb-3"><i class="bi bi-signpost-split me-1"></i>Status Timeline</h6>
+            <ul class="timeline">
+                @foreach (var h in c.StatusHistory.OrderBy(h => h.ChangedDate))
+                {
+                    <li class="@(h.NewStatus == ComplaintStatus.Rejected ? "rejected" : "done")">
+                        <div class="fw-semibold small">@h.NewStatus.DisplayName()</div>
+                        <div class="text-muted small">@h.ChangedDate.ToLocalTime().ToString("MMM dd, yyyy HH:mm") by @h.ChangedBy?.FullName</div>
+                        @if (!string.IsNullOrEmpty(h.Notes))
+                        {
+                            <div class="small mt-1">@h.Notes</div>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+
+        @if (Model.CanAssign)
+        {
+            <div class="card card-panel p-4 mb-3">
+                <h6 class="section-title mb-3"><i class="bi bi-person-check me-1"></i>Assign Officer</h6>
+                @if (!Model.AvailableOfficers.Any())
+                {
+                    <div class="alert alert-warning small mb-0">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        No active complaint officers belong to the <strong>@c.Department?.Name</strong> department, so none can be assigned to this complaint.
+                        <a asp-page="/Admin/Users/Index" class="alert-link d-block mt-1">Add or reassign an officer to this department &rarr;</a>
+                    </div>
+                }
+                else
+                {
+                    <form method="post" asp-page-handler="Assign">
+                        <select name="officerId" class="form-select mb-2" required>
+                            <option value="">Select officer...</option>
+                            @foreach (var o in Model.AvailableOfficers)
+                            {
+                                <option value="@o.Id">@o.Name</option>
+                            }
+                        </select>
+                        <textarea name="notes" class="form-control mb-2" rows="2" placeholder="Assignment notes (optional)"></textarea>
+                        <button type="submit" class="btn btn-primary w-100">Assign</button>
+                    </form>
+                }
+            </div>
+        }
+
+        @if (Model.CanChangePriority)
+        {
+            <div class="card card-panel p-4 mb-3">
+                <h6 class="section-title mb-3"><i class="bi bi-flag me-1"></i>Change Priority</h6>
+                <form method="post" asp-page-handler="ChangePriority" class="d-flex gap-2">
+                    <select name="priority" class="form-select">
+                        @foreach (ComplaintPriority p in Enum.GetValues(typeof(ComplaintPriority)))
+                        {
+                            <option value="@p" selected="@(p == c.Priority)">@p</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary">Set</button>
+                </form>
+            </div>
+        }
+
+        @if (Model.CanChangeStatus || Model.CanEscalate || Model.CanResolve || Model.CanClose || Model.CanReject)
+        {
+            <div class="card card-panel p-4 mb-3">
+                <h6 class="section-title mb-3"><i class="bi bi-gear me-1"></i>Actions</h6>
+
+                @if (Model.CanChangeStatus)
+                {
+                    <form method="post" asp-page-handler="ChangeStatus" class="mb-3">
+                        <label class="form-label small">Update Status</label>
+                        <select name="status" class="form-select mb-2">
+                            <option value="@ComplaintStatus.UnderReview">Under Review</option>
+                            <option value="@ComplaintStatus.Investigating">Investigating</option>
+                        </select>
+                        <textarea name="notes" class="form-control mb-2" rows="2" placeholder="Notes (optional)"></textarea>
+                        <button type="submit" class="btn btn-outline-primary w-100 btn-sm">Update Status</button>
+                    </form>
+                }
+
+                @if (Model.CanEscalate)
+                {
+                    <form method="post" asp-page-handler="Escalate" class="mb-3">
+                        <label class="form-label small">Escalate Complaint</label>
+                        <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Reason for escalation" required></textarea>
+                        <button type="submit" class="btn btn-outline-danger w-100 btn-sm">Escalate</button>
+                    </form>
+                }
+
+                @if (Model.CanResolve)
+                {
+                    <form method="post" asp-page-handler="Resolve" class="mb-3">
+                        <label class="form-label small">Resolve Complaint</label>
+                        <textarea name="resolutionSummary" class="form-control mb-2" rows="2" placeholder="Resolution summary" required></textarea>
+                        <button type="submit" class="btn btn-success w-100 btn-sm">Mark Resolved</button>
+                    </form>
+                }
+
+                @if (Model.CanClose)
+                {
+                    <form method="post" asp-page-handler="Close" class="mb-3">
+                        <label class="form-label small">Close Complaint</label>
+                        <textarea name="notes" class="form-control mb-2" rows="2" placeholder="Closing notes (optional)"></textarea>
+                        <button type="submit" class="btn btn-dark w-100 btn-sm">Close Complaint</button>
+                    </form>
+                }
+
+                @if (Model.CanReject)
+                {
+                    <form method="post" asp-page-handler="Reject">
+                        <label class="form-label small">Reject Complaint</label>
+                        <textarea name="reason" class="form-control mb-2" rows="2" placeholder="Reason for rejection" required></textarea>
+                        <button type="submit" class="btn btn-outline-danger w-100 btn-sm">Reject</button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+</div>

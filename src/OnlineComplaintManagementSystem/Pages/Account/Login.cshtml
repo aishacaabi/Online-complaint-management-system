@@ -1,0 +1,56 @@
+@page
+@model OnlineComplaintManagementSystem.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container login-shell">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-9">
+            <div class="card auth-card">
+                <div class="row g-0">
+                    <div class="col-md-5 auth-side p-4 d-none d-md-flex flex-column justify-content-center">
+                        <i class="bi bi-shield-check display-4 mb-3"></i>
+                        <h4 class="fw-semibold">Online Complaint Management System</h4>
+                        <p class="opacity-75">Sign in to submit, track, and manage complaints securely.</p>
+                    </div>
+                    <div class="col-md-7 p-4 p-md-5">
+                        <h3 class="section-title mb-1">Welcome Back</h3>
+                        <p class="text-muted mb-4">Please sign in to continue.</p>
+
+                        <div asp-validation-summary="All" class="alert alert-danger d-none-empty" role="alert"></div>
+
+                        <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                            <div class="mb-3">
+                                <label asp-for="Input.Email" class="form-label"></label>
+                                <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="name@example.com" />
+                                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="Input.Password" class="form-label"></label>
+                                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="Password" />
+                                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                            </div>
+                            <div class="mb-3 d-flex justify-content-between align-items-center">
+                                <div class="form-check">
+                                    <input asp-for="Input.RememberMe" class="form-check-input" />
+                                    <label asp-for="Input.RememberMe" class="form-check-label"></label>
+                                </div>
+                                <a asp-page="/Account/ForgotPassword" class="small">Forgot password?</a>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
+                        </form>
+
+                        <p class="text-center text-muted mt-4 mb-0">
+                            Don't have an account? <a asp-page="/Account/Register">Register here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

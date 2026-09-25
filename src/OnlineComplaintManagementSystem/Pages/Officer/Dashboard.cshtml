@@ -1,0 +1,99 @@
+@page
+@using OnlineComplaintManagementSystem.Helpers
+@model OnlineComplaintManagementSystem.Pages.Officer.DashboardModel
+@{
+    ViewData["Title"] = "Officer Dashboard";
+}
+
+<h4 class="section-title mb-4">My Dashboard</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Officer/Complaints/Index" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#1a4d8f;"><i class="bi bi-card-list"></i></div>
+            <div>
+                <div class="stat-value">@Model.AssignedCount</div>
+                <div class="stat-label">Assigned to Me</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Officer/Complaints/Index" asp-route-statusGroup="pending" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#e0a800;"><i class="bi bi-hourglass-split"></i></div>
+            <div>
+                <div class="stat-value">@Model.PendingCount</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Officer/Complaints/Index" asp-route-status="Investigating" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#0d6efd;"><i class="bi bi-search"></i></div>
+            <div>
+                <div class="stat-value">@Model.InvestigatingCount</div>
+                <div class="stat-label">Investigating</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Officer/Complaints/Index" asp-route-statusGroup="resolved" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#1e7e34;"><i class="bi bi-check-circle"></i></div>
+            <div>
+                <div class="stat-value">@Model.ResolvedCount</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <a asp-page="/Officer/Complaints/Index" asp-route-statusGroup="overdue" class="stat-card d-flex align-items-center gap-3">
+            <div class="stat-icon" style="background:#c0392b;"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div class="stat-value">@Model.OverdueCount</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="card card-panel">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h6 class="mb-0 section-title">Recently Assigned Complaints</h6>
+        <a asp-page="/Officer/Complaints/Index" class="small">View all</a>
+    </div>
+    @if (!Model.RecentAssigned.Any())
+    {
+        <div class="p-4 text-center text-muted">No complaints assigned to you yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.RecentAssigned)
+                    {
+                        <tr>
+                            <td class="ref-code">@c.ReferenceNumber</td>
+                            <td>@c.Title</td>
+                            <td>@c.Category?.Name</td>
+                            <td><span class="badge @c.Priority.BadgeClass()">@c.Priority</span></td>
+                            <td><span class="badge @c.Status.BadgeClass()">@c.Status.DisplayName()</span></td>
+                            <td>@c.SubmittedDate.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                            <td><a asp-page="/Officer/Complaints/Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

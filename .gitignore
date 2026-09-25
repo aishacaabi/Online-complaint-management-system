@@ -1,0 +1,25 @@
+# Build output
+bin/
+obj/
+[Rr]elease/
+[Dd]ebug/
+publish/
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+
+# Local tool settings
+.claude/
+
+# Thesis documents are kept outside the repository
+ThesisDocumentation/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -1,0 +1,138 @@
+@page
+@using OnlineComplaintManagementSystem.Helpers
+@using OnlineComplaintManagementSystem.Models
+@model OnlineComplaintManagementSystem.Pages.Admin.Reports.IndexModel
+@{
+    ViewData["Title"] = "Reports";
+    var routeData = new Dictionary<string, string?>
+    {
+        ["reportTitle"] = Model.ReportTitle,
+        ["fromDate"] = Model.FromDate?.ToString("yyyy-MM-dd"),
+        ["toDate"] = Model.ToDate?.ToString("yyyy-MM-dd"),
+        ["departmentId"] = Model.DepartmentFilter?.ToString(),
+        ["categoryId"] = Model.CategoryFilter?.ToString(),
+        ["status"] = Model.StatusFilter?.ToString(),
+        ["priority"] = Model.PriorityFilter?.ToString(),
+        ["officerId"] = Model.OfficerFilter
+    };
+}
+
+<h4 class="section-title mb-3"><i class="bi bi-graph-up me-2"></i>Reports</h4>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a class="btn btn-outline-secondary btn-sm" asp-page="/Admin/Reports/Index" asp-route-reportTitle="Complaint Summary Report">Complaint Summary</a>
+    <a class="btn btn-outline-secondary btn-sm" asp-page="/Admin/Reports/Index" asp-route-reportTitle="Pending Complaint Report" asp-route-status="@ComplaintStatus.Submitted">Pending Complaints</a>
+    <a class="btn btn-outline-secondary btn-sm" asp-page="/Admin/Reports/Index" asp-route-reportTitle="Resolved Complaint Report" asp-route-status="@ComplaintStatus.Resolved">Resolved Complaints</a>
+    <a class="btn btn-outline-secondary btn-sm" asp-page="/Admin/Reports/Index" asp-route-reportTitle="Complaint Resolution Time Report" asp-route-status="@ComplaintStatus.Resolved">Resolution Time Report</a>
+</div>
+
+<div class="card card-panel p-3 mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small">Report Title</label>
+            <input type="text" name="reportTitle" value="@Model.ReportTitle" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">From Date</label>
+            <input type="date" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">To Date</label>
+            <input type="date" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Department</label>
+            <select name="departmentId" class="form-select">
+                <option value="">All</option>
+                @foreach (var d in Model.Departments)
+                {
+                    <option value="@d.Id" selected="@(d.Id == Model.DepartmentFilter)">@d.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Category</label>
+            <select name="categoryId" class="form-select">
+                <option value="">All</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.Id" selected="@(c.Id == Model.CategoryFilter)">@c.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All</option>
+                @foreach (ComplaintStatus s in Enum.GetValues(typeof(ComplaintStatus)))
+                {
+                    <option value="@s" selected="@(s == Model.StatusFilter)">@s.DisplayName()</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small">Priority</label>
+            <select name="priority" class="form-select">
+                <option value="">All</option>
+                @foreach (ComplaintPriority p in Enum.GetValues(typeof(ComplaintPriority)))
+                {
+                    <option value="@p" selected="@(p == Model.PriorityFilter)">@p</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Assigned Officer</label>
+            <select name="officerId" class="form-select">
+                <option value="">All</option>
+                @foreach (var o in Model.Officers)
+                {
+                    <option value="@o.Id" selected="@(o.Id == Model.OfficerFilter)">@o.FullName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Generate</button>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <div>
+        <h6 class="section-title mb-0">@Model.ReportTitle</h6>
+        <div class="text-muted small">@Model.Results.Count record(s) &middot; Avg. resolution time: @Model.AverageResolutionDays.ToString("N1") days</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-success btn-sm" asp-page-handler="ExportExcel" asp-all-route-data="routeData"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</a>
+        <a class="btn btn-outline-danger btn-sm" asp-page-handler="ExportPdf" asp-all-route-data="routeData"><i class="bi bi-file-earmark-pdf me-1"></i>Export PDF</a>
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+    </div>
+</div>
+
+<div class="card card-panel">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Reference</th><th>Title</th><th>Category</th><th>Department</th>
+                    <th>Priority</th><th>Status</th><th>Officer</th><th>Submitted</th><th>Resolved</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.Results)
+                {
+                    <tr>
+                        <td class="ref-code">@c.ReferenceNumber</td>
+                        <td>@c.Title</td>
+                        <td>@c.Category?.Name</td>
+                        <td>@c.Department?.Name</td>
+                        <td><span class="badge @c.Priority.BadgeClass()">@c.Priority</span></td>
+                        <td><span class="badge @c.Status.BadgeClass()">@c.Status.DisplayName()</span></td>
+                        <td>@(c.CurrentOfficer?.FullName ?? "Unassigned")</td>
+                        <td>@c.SubmittedDate.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                        <td>@(c.ResolvedDate?.ToLocalTime().ToString("MMM dd, yyyy") ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
