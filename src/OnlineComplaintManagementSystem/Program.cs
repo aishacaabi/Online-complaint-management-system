@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using OnlineComplaintManagementSystem.Data;
 using OnlineComplaintManagementSystem.Models;
@@ -8,6 +9,13 @@ using QuestPDF.Infrastructure;
 QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -95,6 +103,7 @@ if (urlInUse is not null)
 }
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

@@ -10,6 +10,8 @@ public static class SeedData
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         await context.Database.MigrateAsync();
+        var environment = services.GetRequiredService<IHostEnvironment>();
+        var configuration = services.GetRequiredService<IConfiguration>();
 
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
@@ -60,8 +62,16 @@ public static class SeedData
             await context.SaveChangesAsync();
         }
 
-        const string adminEmail = "admin@cms.local";
-        if (await userManager.FindByEmailAsync(adminEmail) is null)
+        var adminEmail = environment.IsDevelopment()
+            ? configuration["BootstrapAdmin:Email"] ?? "admin@cms.local"
+            : configuration["BootstrapAdmin:Email"];
+        var adminPassword = environment.IsDevelopment()
+            ? configuration["BootstrapAdmin:Password"] ?? "Admin@12345"
+            : configuration["BootstrapAdmin:Password"];
+
+        if (!string.IsNullOrWhiteSpace(adminEmail) &&
+            !string.IsNullOrWhiteSpace(adminPassword) &&
+            await userManager.FindByEmailAsync(adminEmail) is null)
         {
             var admin = new ApplicationUser
             {
@@ -73,7 +83,7 @@ public static class SeedData
                 CreatedDate = DateTime.UtcNow
             };
 
-            var result = await userManager.CreateAsync(admin, "Admin@12345");
+            var result = await userManager.CreateAsync(admin, adminPassword);
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(admin, RoleNames.SuperAdministrator);
@@ -81,7 +91,7 @@ public static class SeedData
         }
 
         const string officerEmail = "officer@cms.local";
-        if (await userManager.FindByEmailAsync(officerEmail) is null)
+        if (environment.IsDevelopment() && await userManager.FindByEmailAsync(officerEmail) is null)
         {
             // Departments can be renamed or removed by the administrator, so fall back to any active one
             // rather than failing application startup.
