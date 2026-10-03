@@ -121,9 +121,31 @@ app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
-using (var scope = app.Services.CreateScope())
+// On a hosting platform the database container can take longer to start than the web app, so keep
+// trying for a while instead of crashing on the first failed connection.
+const int maxDatabaseAttempts = 24;
+for (var attempt = 1; ; attempt++)
 {
-    await SeedData.InitializeAsync(scope.ServiceProvider);
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        await SeedData.InitializeAsync(scope.ServiceProvider);
+        break;
+    }
+    catch (Exception ex) when (ex is Microsoft.Data.SqlClient.SqlException or InvalidOperationException or ArgumentException or PlatformNotSupportedException)
+    {
+        var reason = ex.GetBaseException().Message;
+        if (attempt >= maxDatabaseAttempts || app.Environment.IsDevelopment())
+        {
+            Console.Error.WriteLine($"DATABASE ERROR: could not connect to or set up the database. {reason}");
+            Console.Error.WriteLine("Check the ConnectionStrings__DefaultConnection setting (server address, database name, user and password).");
+            Environment.ExitCode = 1;
+            return;
+        }
+
+        Console.Error.WriteLine($"Database not ready (attempt {attempt} of {maxDatabaseAttempts}): {reason} Retrying in 5 seconds...");
+        await Task.Delay(TimeSpan.FromSeconds(5));
+    }
 }
 
 app.Run();
