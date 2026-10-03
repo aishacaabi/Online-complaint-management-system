@@ -68,7 +68,9 @@ public class IndexModel : PageModel
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(c => c.Title.Contains(search) || c.ReferenceNumber.Contains(search));
+            // Lower-cased on both sides so the search ignores case on every database provider.
+            var term = search.Trim().ToLower();
+            query = query.Where(c => c.Title.ToLower().Contains(term) || c.ReferenceNumber.ToLower().Contains(term));
         }
         if (statusGroup == "pending")
         {

@@ -56,6 +56,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(c => c.Status);
             entity.HasIndex(c => c.Priority);
             entity.HasIndex(c => c.SubmittedDate);
+
+            if (Database.IsNpgsql())
+            {
+                // PostgreSQL has no automatic rowversion column; keep it as an ordinary nullable column.
+                entity.Property(c => c.RowVersion).IsConcurrencyToken(false).ValueGeneratedNever();
+            }
         });
 
         builder.Entity<ComplaintAttachment>(entity =>

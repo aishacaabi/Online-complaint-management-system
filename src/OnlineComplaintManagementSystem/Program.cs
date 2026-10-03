@@ -17,9 +17,27 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-// Database
+// Database: SQL Server by default; PostgreSQL when Database:Provider is "Postgres" (used on the
+// hosted deployment, where SQL Server's memory requirement cannot be met).
+var usePostgres = string.Equals(builder.Configuration["Database:Provider"], "Postgres", StringComparison.OrdinalIgnoreCase);
+if (usePostgres)
+{
+    // Store DateTime values as plain timestamps, the same way SQL Server's datetime2 does.
+    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (usePostgres)
+    {
+        options.UseNpgsql(connectionString);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -132,7 +150,7 @@ for (var attempt = 1; ; attempt++)
         await SeedData.InitializeAsync(scope.ServiceProvider);
         break;
     }
-    catch (Exception ex) when (ex is Microsoft.Data.SqlClient.SqlException or InvalidOperationException or ArgumentException or PlatformNotSupportedException)
+    catch (Exception ex) when (ex is System.Data.Common.DbException or System.Net.Sockets.SocketException or InvalidOperationException or ArgumentException or PlatformNotSupportedException)
     {
         var reason = ex.GetBaseException().Message;
         if (attempt >= maxDatabaseAttempts || app.Environment.IsDevelopment())

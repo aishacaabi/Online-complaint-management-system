@@ -39,7 +39,9 @@ public class IndexModel : PageModel
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(a => a.UserName.Contains(search) || (a.Description != null && a.Description.Contains(search)));
+            // Lower-cased on both sides so the search ignores case on every database provider.
+            var term = search.Trim().ToLower();
+            query = query.Where(a => a.UserName.ToLower().Contains(term) || (a.Description != null && a.Description.ToLower().Contains(term)));
         }
         if (!string.IsNullOrEmpty(action))
         {

@@ -9,7 +9,16 @@ public static class SeedData
     public static async Task InitializeAsync(IServiceProvider services)
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        await context.Database.MigrateAsync();
+        if (context.Database.IsNpgsql())
+        {
+            // The migrations are written for SQL Server, so on PostgreSQL the schema is created
+            // directly from the model instead.
+            await context.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            await context.Database.MigrateAsync();
+        }
         var environment = services.GetRequiredService<IHostEnvironment>();
         var configuration = services.GetRequiredService<IConfiguration>();
 

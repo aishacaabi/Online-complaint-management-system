@@ -43,8 +43,8 @@ public class TrackModel : PageModel
         }
 
         Searched = true;
-        var refNumber = Input.ReferenceNumber.Trim();
-        var email = Input.Email.Trim();
+        var refNumber = Input.ReferenceNumber.Trim().ToLower();
+        var email = Input.Email.Trim().ToLower();
 
         Result = await _context.Complaints
             .Include(c => c.Category)
@@ -52,8 +52,8 @@ public class TrackModel : PageModel
             .Include(c => c.Assignments).ThenInclude(a => a.Officer)
             .Include(c => c.StatusHistory).ThenInclude(h => h.ChangedBy)
             .Include(c => c.Complainant)
-            .Where(c => c.ReferenceNumber == refNumber &&
-                        ((c.ContactEmail != null && c.ContactEmail == email) || c.Complainant!.Email == email))
+            .Where(c => c.ReferenceNumber.ToLower() == refNumber &&
+                        ((c.ContactEmail != null && c.ContactEmail.ToLower() == email) || c.Complainant!.Email!.ToLower() == email))
             .FirstOrDefaultAsync();
 
         if (Result is null)
